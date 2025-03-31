@@ -5,12 +5,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	helper "github.com/pakornsrs/restiny/internal"
-	"github.com/pakornsrs/restiny/models"
+	"net/url"
 )
 
-func GET(request models.RestinyRequest) (*http.Response, error) {
+type RestinyRequest struct {
+	Endpoint string
+	Params   *url.Values
+	Headers  []Header
+}
+
+type Header struct {
+	Key   string
+	Value string
+}
+
+func GET(request RestinyRequest) (*http.Response, error) {
 	req, err := http.NewRequest("GET", request.Endpoint, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
@@ -19,7 +28,7 @@ func GET(request models.RestinyRequest) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -33,7 +42,7 @@ func GET(request models.RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func POST[T any](request models.RestinyRequest, body T) (*http.Response, error) {
+func POST[T any](request RestinyRequest, body T) (*http.Response, error) {
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
@@ -47,7 +56,7 @@ func POST[T any](request models.RestinyRequest, body T) (*http.Response, error) 
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -60,7 +69,7 @@ func POST[T any](request models.RestinyRequest, body T) (*http.Response, error) 
 	return resp, nil
 }
 
-func PUT[T any](request models.RestinyRequest, body T) (*http.Response, error) {
+func PUT[T any](request RestinyRequest, body T) (*http.Response, error) {
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
@@ -74,7 +83,7 @@ func PUT[T any](request models.RestinyRequest, body T) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -87,7 +96,7 @@ func PUT[T any](request models.RestinyRequest, body T) (*http.Response, error) {
 	return resp, nil
 }
 
-func DELETE(request models.RestinyRequest) (*http.Response, error) {
+func DELETE(request RestinyRequest) (*http.Response, error) {
 
 	req, err := http.NewRequest("DELETE", request.Endpoint, nil)
 	if err != nil {
@@ -97,7 +106,7 @@ func DELETE(request models.RestinyRequest) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -111,7 +120,7 @@ func DELETE(request models.RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func GETWithQueryParam(request models.RestinyRequest) (*http.Response, error) {
+func GETWithQueryParam(request RestinyRequest) (*http.Response, error) {
 
 	path := fmt.Sprintf("%s?%s", request.Endpoint, request.Params.Encode())
 
@@ -123,7 +132,7 @@ func GETWithQueryParam(request models.RestinyRequest) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -137,7 +146,7 @@ func GETWithQueryParam(request models.RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func DELETEWithQueryParam(request models.RestinyRequest) (*http.Response, error) {
+func DELETEWithQueryParam(request RestinyRequest) (*http.Response, error) {
 	path := fmt.Sprintf("%s?%s", request.Endpoint, request.Params.Encode())
 
 	req, err := http.NewRequest("DELETE", path, nil)
@@ -148,7 +157,7 @@ func DELETEWithQueryParam(request models.RestinyRequest) (*http.Response, error)
 
 	req.Header.Set("Content-Type", "application/json")
 	if len(request.Headers) > 0 {
-		req = helper.SetHTTPRequestHeader(req, request.Headers)
+		req = setHTTPRequestHeader(req, request.Headers)
 	}
 
 	client := &http.Client{}
@@ -160,4 +169,16 @@ func DELETEWithQueryParam(request models.RestinyRequest) (*http.Response, error)
 	}
 
 	return resp, nil
+}
+
+func setHTTPRequestHeader(req *http.Request, headers []Header) *http.Request {
+	for _, header := range headers {
+		if header.Key == "Content-Type" && header.Value == "application/json" {
+			continue
+		}
+
+		req.Header.Set(header.Key, header.Value)
+	}
+
+	return req
 }
