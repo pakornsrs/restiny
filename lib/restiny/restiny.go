@@ -19,16 +19,16 @@ type Header struct {
 	Value string
 }
 
-func GET(request RestinyRequest) (*http.Response, error) {
-	req, err := http.NewRequest("GET", request.Endpoint, nil)
+func GET(endpoint, apiKey string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -42,21 +42,21 @@ func GET(request RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func POST[T any](request RestinyRequest, body T) (*http.Response, error) {
+func POST[T any](endpoint string, body T, apiKey string) (*http.Response, error) {
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", request.Endpoint, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -69,21 +69,21 @@ func POST[T any](request RestinyRequest, body T) (*http.Response, error) {
 	return resp, nil
 }
 
-func PUT[T any](request RestinyRequest, body T) (*http.Response, error) {
+func PUT[T any](endpoint string, body T, apiKey string) (*http.Response, error) {
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PUT", request.Endpoint, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -96,17 +96,17 @@ func PUT[T any](request RestinyRequest, body T) (*http.Response, error) {
 	return resp, nil
 }
 
-func DELETE(request RestinyRequest) (*http.Response, error) {
+func DELETE(endpoint string, apiKey string) (*http.Response, error) {
 
-	req, err := http.NewRequest("DELETE", request.Endpoint, nil)
+	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -120,9 +120,9 @@ func DELETE(request RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func GETWithQueryParam(request RestinyRequest) (*http.Response, error) {
+func GETWithQueryParam(endpoint string, params *url.Values, apiKey string) (*http.Response, error) {
 
-	path := fmt.Sprintf("%s?%s", request.Endpoint, request.Params.Encode())
+	path := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
 	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {
@@ -131,8 +131,8 @@ func GETWithQueryParam(request RestinyRequest) (*http.Response, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -146,8 +146,8 @@ func GETWithQueryParam(request RestinyRequest) (*http.Response, error) {
 	return resp, nil
 }
 
-func DELETEWithQueryParam(request RestinyRequest) (*http.Response, error) {
-	path := fmt.Sprintf("%s?%s", request.Endpoint, request.Params.Encode())
+func DELETEWithQueryParam(endpoint string, params *url.Values, apiKey string) (*http.Response, error) {
+	path := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
 	req, err := http.NewRequest("DELETE", path, nil)
 	if err != nil {
@@ -156,8 +156,8 @@ func DELETEWithQueryParam(request RestinyRequest) (*http.Response, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if len(request.Headers) > 0 {
-		req = setHTTPRequestHeader(req, request.Headers)
+	if len(apiKey) > 0 {
+		req.Header.Set("Authorization", apiKey)
 	}
 
 	client := &http.Client{}
@@ -169,16 +169,4 @@ func DELETEWithQueryParam(request RestinyRequest) (*http.Response, error) {
 	}
 
 	return resp, nil
-}
-
-func setHTTPRequestHeader(req *http.Request, headers []Header) *http.Request {
-	for _, header := range headers {
-		if header.Key == "Content-Type" && header.Value == "application/json" {
-			continue
-		}
-
-		req.Header.Set(header.Key, header.Value)
-	}
-
-	return req
 }
